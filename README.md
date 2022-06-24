@@ -1,2 +1,2 @@
-# swarm-robotics
-The simulation and the implementation of swarm robotics using Q-learning method.
+# Swarm Robotics
+Simulation and implementation of swarm robotics using the Q-learning method.
