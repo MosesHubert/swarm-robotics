@@ -1,4 +1,3 @@
-import time
 import pygame
 from tools import *
 from matrix import *
@@ -20,9 +19,9 @@ class Simulator:
         self.max_speed = 1
         self.max_length = 1
 
-        self.size = 25
-        self.lowlim = 75
-        self.uplim = 125
+        self.size = 20
+        self.lowlim = 40
+        self.uplim = 60
 
         self.values = {"separation" : 0.05,
                        "alignment"  : 0.05,
@@ -284,6 +283,7 @@ class Simulator:
         self.velocity += self.acceleration
         self.velocity.limit(self.max_speed)
         self.angle = self.velocity.heading() + np.pi/2
+        print(self.acceleration)
     
     def Draw(self, screen, distance=5, scale=2):
         ps = []
@@ -433,7 +433,7 @@ class Simulator:
         for i in range(0, n_state * 7, 7):
             row = []
             for j in range(i, i + 7, 1):
-                row.append(0)
+                row.append(float(uniform(-2,2)))
             self.Q_values.append(row)
         self.Q_values = np.array(self.Q_values,dtype=float).reshape(n_state, 7)
 
@@ -612,6 +612,12 @@ class Simulator:
             return 1
         else:
             return 0
+
+    def is_state_change(self):
+        if self.new_state != self.state:
+            return True
+        else:
+            return False
 
     def update_Q(self):
         if self.new_state != self.state:
