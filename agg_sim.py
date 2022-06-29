@@ -5,23 +5,26 @@ from random import uniform
 
 class Simulator:
     def __init__(self):
-        self.position = Vector()
-        self.velocity = Vector()
+        self.position     = Vector()
+        self.velocity     = Vector()
         self.acceleration = Vector()
-        self.angle = 0
+        self.angle        = 0
 
-        self.color1 = (255, 255, 255)
-        self.color2 = (  0,   0,   0)
-        self.color3 = (255,   0,   0)
-        self.color4 = (  0, 255,   0)
+        self.white  = (225, 225, 225)
+        self.black  = (  0,   0,   0)
+        self.red    = (150,   0,   0)
+        self.green  = (110, 255,  10)
+        self.yellow = (240, 240,   0)
+        self.blue   = ( 80, 180, 240)
+        self.orange = (210, 150, 100)
         self.stroke = 5
 
-        self.max_speed = 1
+        self.max_speed  = 1
         self.max_length = 1
 
         self.size = 20
-        self.lowlim = 40
-        self.uplim = 60
+        self.lowlim = 50
+        self.uplim = 90
 
         self.values = {"separation" : 0.05,
                        "alignment"  : 0.05,
@@ -31,23 +34,30 @@ class Simulator:
                        "alignment_cohesion"   : 0.05,
                        "separation_alignment_cohesion" : 0.05}
 
-        self.state = 0
+        self.state     = 0
         self.new_state = 0
-        self.reward = 0
-        self.action = 0
+        self.reward    = 0
+        self.action    = 0
 
         self.learning_rate = 0.5
-        self.discount = 0.8
-        self.epsilon = 0.1
+        self.discount      = 0.8
+        self.epsilon       = 0.1
 
-        self.actions = ['separation', 
-                        'alignment', 
-                        'cohesion',
-                        'separation_alignment',
-                        'separation_cohesion',
-                        'alignment_cohesion',
-                        'separation_alignment, cohesion']
-        self.iter = 0
+        self.states  = ['Alone',
+                        'Nearby',
+                        'Lost',
+                        'Crash',
+                        'Close']
+
+        self.actions = ['Separation', 
+                        'Alignment', 
+                        'Cohesion',
+                        'Separation-Alignment',
+                        'Separation-Cohesion',
+                        'Alignment-Cohesion',
+                        'Separation-Alignment-Cohesion']
+        
+        self.mode = ''
     
     def start(self, x, y):
         self.position = Vector(x, y)
@@ -283,9 +293,8 @@ class Simulator:
         self.velocity += self.acceleration
         self.velocity.limit(self.max_speed)
         self.angle = self.velocity.heading() + np.pi/2
-        print(self.acceleration)
     
-    def Draw(self, screen, distance=5, scale=2):
+    def Draw(self, screen, agent_name, distance=5, scale=2):
         ps = []
         points = [None for _ in range(3)]
         
@@ -303,11 +312,20 @@ class Simulator:
             x = int(projected_2d[0][0] * scale) + self.position.x
             y = int(projected_2d[1][0] * scale) + self.position.y
             ps.append((x, y))
-        
-        pygame.draw.circle(screen, self.color4, (self.position.x, self.position.y), self.uplim, width=1)
-        pygame.draw.circle(screen, self.color3, (self.position.x, self.position.y), self.lowlim, width=1)
-        pygame.draw.circle(screen, self.color1, (self.position.x, self.position.y), self.size)
-        pygame.draw.polygon(screen, self.color2, ps, self.stroke)
+
+        pygame.draw.circle(screen, self.green, (self.position.x, self.position.y), self.uplim, width=1)
+        pygame.draw.circle(screen, self.red, (self.position.x, self.position.y), self.lowlim, width=1)
+        my_font = pygame.font.SysFont('Arial', 12)
+        text_agent = my_font.render(agent_name, False, self.white)
+        text_state = my_font.render(self.states[self.state], False, self.yellow)
+        text_action = my_font.render(self.actions[self.action], False, self.blue)
+        text_mode = my_font.render(self.mode, False, self.orange)
+        screen.blit(text_agent, (self.position.x-20, self.position.y-35))
+        screen.blit(text_state, (self.position.x+28, self.position.y-15))
+        screen.blit(text_action, (self.position.x+28, self.position.y))
+        screen.blit(text_mode, (self.position.x-28, self.position.y+25))
+        pygame.draw.circle(screen, self.white, (self.position.x, self.position.y), self.size)
+        pygame.draw.polygon(screen, self.black, ps, self.stroke)
 
     def alone(self, flockMates):
         total = 0
@@ -454,147 +472,149 @@ class Simulator:
     def get_next_action(self):
         if np.random.random() > self.epsilon:
             self.action = np.argmax(self.Q_values[self.state])
+            self.mode = 'Exploitation'
         else:
             self.action = np.random.randint(7)
+            self.mode = 'Exploration'
 
     def update_action(self, flock):
-        if self.actions[self.action] == 'separation' and self.state == 0:
+        if self.actions[self.action] == 'Separation' and self.state == 0:
             avoid = self.separation(flock)
             avoid = avoid * self.values["separation"]
             self.acceleration.add(avoid)
-        elif self.actions[self.action] == 'separation' and self.state == 1:
+        elif self.actions[self.action] == 'Separation' and self.state == 1:
             avoid = self.separation(flock)
             avoid = avoid * self.values["separation"]
             self.acceleration.add(avoid)
-        elif self.actions[self.action] == 'separation' and self.state == 2:
+        elif self.actions[self.action] == 'Separation' and self.state == 2:
             avoid = self.separation(flock)
             avoid = avoid * self.values["separation"]
             self.acceleration.add(avoid)
-        elif self.actions[self.action] == 'separation' and self.state == 3:
+        elif self.actions[self.action] == 'Separation' and self.state == 3:
             avoid = self.separation(flock)
             avoid = avoid * self.values["separation"]
             self.acceleration.add(avoid)
-        elif self.actions[self.action] == 'separation' and self.state == 4:
+        elif self.actions[self.action] == 'Separation' and self.state == 4:
             avoid = self.separation(flock)
             avoid = avoid * self.values["separation"]
             self.acceleration.add(avoid)
-        elif self.actions[self.action] == 'alignment' and self.state == 0:
+        elif self.actions[self.action] == 'Alignment' and self.state == 0:
             align = self.alignment(flock)
             align = align * self.values["alignment"]
             self.acceleration.add(align)
-        elif self.actions[self.action] == 'alignment' and self.state == 1:
+        elif self.actions[self.action] == 'Alignment' and self.state == 1:
             align = self.alignment(flock)
             align = align * self.values["alignment"]
             self.acceleration.add(align)
-        elif self.actions[self.action] == 'alignment' and self.state == 2:
+        elif self.actions[self.action] == 'Alignment' and self.state == 2:
             align = self.alignment(flock)
             align = align * self.values["alignment"]
             self.acceleration.add(align)
-        elif self.actions[self.action] == 'alignment' and self.state == 3:
+        elif self.actions[self.action] == 'Alignment' and self.state == 3:
             align = self.alignment(flock)
             align = align * self.values["alignment"]
             self.acceleration.add(align)
-        elif self.actions[self.action] == 'alignment' and self.state == 4:
+        elif self.actions[self.action] == 'Alignment' and self.state == 4:
             align = self.alignment(flock)
             align = align * self.values["alignment"]
             self.acceleration.add(align)     
-        elif self.actions[self.action] == 'cohesion' and self.state == 0:
+        elif self.actions[self.action] == 'Cohesion' and self.state == 0:
             gather = self.cohesion(flock)
             gather = gather * self.values["cohesion"]
             self.acceleration.add(gather)
-        elif self.actions[self.action] == 'cohesion' and self.state == 1:
+        elif self.actions[self.action] == 'Cohesion' and self.state == 1:
             gather = self.cohesion(flock)
             gather = gather * self.values["cohesion"]
             self.acceleration.add(gather)
-        elif self.actions[self.action] == 'cohesion' and self.state == 2:
+        elif self.actions[self.action] == 'Cohesion' and self.state == 2:
             gather = self.cohesion(flock)
             gather = gather * self.values["cohesion"]
             self.acceleration.add(gather)
-        elif self.actions[self.action] == 'cohesion' and self.state == 3:
+        elif self.actions[self.action] == 'Cohesion' and self.state == 3:
             gather = self.cohesion(flock)
             gather = gather * self.values["cohesion"]
             self.acceleration.add(gather)
-        elif self.actions[self.action] == 'cohesion' and self.state == 4:
+        elif self.actions[self.action] == 'Cohesion' and self.state == 4:
             gather = self.cohesion(flock)
             gather = gather * self.values["cohesion"]
             self.acceleration.add(gather)
-        elif self.actions[self.action] == 'separation_alignment' and self.state == 0:
+        elif self.actions[self.action] == 'Separation-Alignment' and self.state == 0:
             sep_al = self.separation_alignment(flock)
             sep_al = sep_al * self.values["separation_alignment"]
             self.acceleration.add(sep_al)
-        elif self.actions[self.action] == 'separation_alignment' and self.state == 1:
+        elif self.actions[self.action] == 'Separation-Alignment' and self.state == 1:
             sep_al = self.separation_alignment(flock)
             sep_al = sep_al * self.values["separation_alignment"]
             self.acceleration.add(sep_al)
-        elif self.actions[self.action] == 'separation_alignment' and self.state == 2:
+        elif self.actions[self.action] == 'Separation-Alignment' and self.state == 2:
             sep_al = self.separation_alignment(flock)
             sep_al = sep_al * self.values["separation_alignment"]
             self.acceleration.add(sep_al)
-        elif self.actions[self.action] == 'separation_alignment' and self.state == 3:
+        elif self.actions[self.action] == 'Separation-Alignment' and self.state == 3:
             sep_al = self.separation_alignment(flock)
             sep_al = sep_al * self.values["separation_alignment"]
             self.acceleration.add(sep_al)
-        elif self.actions[self.action] == 'separation_alignment' and self.state == 4:
+        elif self.actions[self.action] == 'Separation-Alignment' and self.state == 4:
             sep_al = self.separation_alignment(flock)
             sep_al = sep_al * self.values["separation_alignment"]
             self.acceleration.add(sep_al)
-        elif self.actions[self.action] == 'separation_cohesion' and self.state == 0:
+        elif self.actions[self.action] == 'Separation-Cohesion' and self.state == 0:
             sep_coh = self.separation_cohesion(flock)
             sep_coh = sep_coh * self.values["separation_cohesion"]
             self.acceleration.add(sep_coh)
-        elif self.actions[self.action] == 'separation_cohesion' and self.state == 1:
+        elif self.actions[self.action] == 'Separation-Cohesion' and self.state == 1:
             sep_coh = self.separation_cohesion(flock)
             sep_coh = sep_coh * self.values["separation_cohesion"]
             self.acceleration.add(sep_coh)
-        elif self.actions[self.action] == 'separation_cohesion' and self.state == 2:
+        elif self.actions[self.action] == 'Separation-Cohesion' and self.state == 2:
             sep_coh = self.separation_cohesion(flock)
             sep_coh = sep_coh * self.values["separation_cohesion"]
             self.acceleration.add(sep_coh)
-        elif self.actions[self.action] == 'separation_cohesion' and self.state == 3:
+        elif self.actions[self.action] == 'Separation-Cohesion' and self.state == 3:
             sep_coh = self.separation_cohesion(flock)
             sep_coh = sep_coh * self.values["separation_cohesion"]
             self.acceleration.add(sep_coh)
-        elif self.actions[self.action] == 'separation_cohesion' and self.state == 4:
+        elif self.actions[self.action] == 'Separation-Cohesion' and self.state == 4:
             sep_coh = self.separation_cohesion(flock)
             sep_coh = sep_coh * self.values["separation_cohesion"]
             self.acceleration.add(sep_coh)
-        elif self.actions[self.action] == 'alignment_cohesion' and self.state == 0:
+        elif self.actions[self.action] == 'Alignment-Cohesion' and self.state == 0:
             al_coh = self.alignment_cohesion(flock)
             al_coh = al_coh * self.values["alignment_cohesion"]
             self.acceleration.add(al_coh)
-        elif self.actions[self.action] == 'alignment_cohesion' and self.state == 1:
+        elif self.actions[self.action] == 'Alignment-Cohesion' and self.state == 1:
             al_coh = self.alignment_cohesion(flock)
             al_coh = al_coh * self.values["alignment_cohesion"]
             self.acceleration.add(al_coh)
-        elif self.actions[self.action] == 'alignment_cohesion' and self.state == 2:
+        elif self.actions[self.action] == 'Alignment-Cohesion' and self.state == 2:
             al_coh = self.alignment_cohesion(flock)
             al_coh = al_coh * self.values["alignment_cohesion"]
             self.acceleration.add(al_coh)
-        elif self.actions[self.action] == 'alignment_cohesion' and self.state == 3:
+        elif self.actions[self.action] == 'Alignment-Cohesion' and self.state == 3:
             al_coh = self.alignment_cohesion(flock)
             al_coh = al_coh * self.values["alignment_cohesion"]
             self.acceleration.add(al_coh)
-        elif self.actions[self.action] == 'alignment_cohesion' and self.state == 4:
+        elif self.actions[self.action] == 'Alignment-Cohesion' and self.state == 4:
             al_coh = self.alignment_cohesion(flock)
             al_coh = al_coh * self.values["alignment_cohesion"]
             self.acceleration.add(al_coh)
-        elif self.actions[self.action] == 'separation_alignment_cohesion' and self.state == 0:
+        elif self.actions[self.action] == 'Separation-Alignment-Cohesion' and self.state == 0:
             sep_al_coh = self.separation_alignment_cohesion(flock)
             sep_al_coh = sep_al_coh * self.values["separation_alignment_cohesion"]
             self.acceleration.add(sep_al_coh)
-        elif self.actions[self.action] == 'separation_alignment_cohesion' and self.state == 1:
+        elif self.actions[self.action] == 'Separation-Alignment-Cohesion' and self.state == 1:
             sep_al_coh = self.separation_alignment_cohesion(flock)
             sep_al_coh = sep_al_coh * self.values["separation_alignment_cohesion"]
             self.acceleration.add(sep_al_coh)
-        elif self.actions[self.action] == 'separation_alignment_cohesion' and self.state == 2:
+        elif self.actions[self.action] == 'Separation-Alignment-Cohesion' and self.state == 2:
             sep_al_coh = self.separation_alignment_cohesion(flock)
             sep_al_coh = sep_al_coh * self.values["separation_alignment_cohesion"]
             self.acceleration.add(sep_al_coh)
-        elif self.actions[self.action] == 'separation_alignment_cohesion' and self.state == 3:
+        elif self.actions[self.action] == 'Separation-Alignment-Cohesion' and self.state == 3:
             sep_al_coh = self.separation_alignment_cohesion(flock)
             sep_al_coh = sep_al_coh * self.values["separation_alignment_cohesion"]
             self.acceleration.add(sep_al_coh)
-        elif self.actions[self.action] == 'separation_alignment_cohesion' and self.state == 4:
+        elif self.actions[self.action] == 'Separation-Alignment-Cohesion' and self.state == 4:
             sep_al_coh = self.separation_alignment_cohesion(flock)
             sep_al_coh = sep_al_coh * self.values["separation_alignment_cohesion"]
             self.acceleration.add(sep_al_coh)
@@ -628,8 +648,6 @@ class Simulator:
         else:
             self.Q_values = self.Q_values
         
-        print('Iterasi ke-{}'.format(self.iter))
-        self.iter += 1
         return self.Q_values
 
     def crashing(self, flockMates):
@@ -638,3 +656,8 @@ class Simulator:
             if mate is not self and dist <= 2 * self.size:
                 self.velocity = Vector()
                 self.acceleration = Vector()
+
+    def terminal_output(self):
+        print('State\t: {}'.format(self.states[self.new_state]))
+        print('Action\t: {}'.format(self.actions[self.action]))
+        print('Mode\t: {}'.format(self.mode))
