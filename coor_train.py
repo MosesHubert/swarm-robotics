@@ -5,23 +5,29 @@ from constants import *
 from uiParameters import *
 from coor_sim import Simulator
 
+pygame.init()
 speed = 0.005
 fps = 60
 n = 4
 
 flock = []
 for i in range(n):
-	flock.append(Simulator())
+	name = "Agent " + str(i+1)
+	flock.append(Simulator(agent_name=name))
 
 for boid in flock:
 	boid.create_Q()
 
 episodes = 100 # jumlah episode
 
+print('\nSTART SIMULATION')
+print("\n==============================================\n")
+
 for episode in range(episodes):
 	pygame.init()
 	window = pygame.display.set_mode(size)
 	clock = pygame.time.Clock()
+	window.fill((10, 10, 15))
 
 	textI = "10"
 	reset = False
@@ -31,7 +37,7 @@ for episode in range(episodes):
 	showUI = False
 	clicked = False
 	run = True
-	sim_time = 600 # 1 episode = 10 detik
+	sim_time = 900 # 1 episode = 15 detik
 
 	flock[0].start(200,320)
 	flock[1].start(200,400)
@@ -42,21 +48,17 @@ for episode in range(episodes):
 		boid.current_state(flock, Width, Height)
 		boid.get_next_action()
 
-	print("Agent 1 (Episode {})".format(episode+1))
-	flock[0].terminal_output()
-	print("")
+	str_terminal1 = flock[0].terminal_output()
+	print(f"Agent 1 (Episode {episode+1}) =>\t" + str_terminal1)
 
-	print("Agent 2 (Episode {})".format(episode+1))
-	flock[1].terminal_output()
-	print("")
+	str_terminal2 = flock[1].terminal_output()
+	print(f"Agent 2 (Episode {episode+1}) =>\t" + str_terminal2)
 
-	print("Agent 3 (Episode {})".format(episode+1))
-	flock[2].terminal_output()
-	print("")
+	str_terminal3 = flock[2].terminal_output()
+	print(f"Agent 3 (Episode {episode+1}) =>\t" + str_terminal3)
 
-	print("Agent 4 (Episode {})".format(episode+1))
-	flock[3].terminal_output()
-	print("")
+	str_terminal4 = flock[3].terminal_output()
+	print(f"Agent 4 (Episode {episode+1}) =>\t" + str_terminal4)
 
 	while run:
 		aggregate = 0
@@ -64,14 +66,6 @@ for episode in range(episodes):
 		window.fill((10, 10, 15))
 
 		n = numberInput.value
-
-		if reset == True or resetButton.state == True:
-			flock = []
-			for i in range(n):
-				flock.append(Simulator())
-			for boid in flock:
-				boid.create_Q()
-			reset = False
 
 		flock[0].draw_target(window)
 
@@ -87,41 +81,32 @@ for episode in range(episodes):
 		q_values1 = flock[0].update_Q()
 		if flock[0].is_state_change():
 			flock[0].get_next_action()
-			print("Agent 1 (Episode {})".format(episode+1))
-			flock[0].terminal_output()
-		# print(q_values1)
-			print("")
+			str_terminal1 = flock[0].terminal_output()
+			print(f"Agent 1 (Episode {episode+1}) =>\t" + str_terminal1)
 
 		q_values2 = flock[1].update_Q()
 		if flock[1].is_state_change():
 			flock[1].get_next_action()
-			print("Agent 2 (Episode {})".format(episode+1))
-			flock[1].terminal_output()
-		# print(q_values2)
-			print("")
+			str_terminal2 = flock[1].terminal_output()
+			print(f"Agent 2 (Episode {episode+1}) =>\t" + str_terminal2)
 
 		q_values3 = flock[2].update_Q()
 		if flock[2].is_state_change():
 			flock[2].get_next_action()
-			print("Agent 3 (Episode {})".format(episode+1))
-			flock[2].terminal_output()
-		# print(q_values3)
-			print("")
+			str_terminal3 = flock[2].terminal_output()
+			print(f"Agent 3 (Episode {episode+1}) =>\t" + str_terminal3)
 
 		q_values4 = flock[3].update_Q()
 		if flock[3].is_state_change():
 			flock[3].get_next_action()
-			print("Agent 4 (Episode {})".format(episode+1))
-			flock[3].terminal_output()
-		# print(q_values4)
-			print("")
+			str_terminal4 = flock[3].terminal_output()
+			print(f"Agent 4 (Episode {episode+1}) =>\t" + str_terminal4)
 
-		for index, boid in enumerate(flock):
-			name = "Agent " + str(index+1)
-			boid.Draw(screen=window, agent_name=name)
+		for boid in flock:
+			boid.Draw(window)
 
 		if aggregate == 4:
-			print("Konstanta aggregate: {}\n".format(aggregate))
+			print("Agregasi terjadi pada daerah target.")
 			run = False
 
 		sim_time -= 1
@@ -155,6 +140,6 @@ for episode in range(episodes):
 		pygame.display.flip()
 		clicked = False
 	
-	print("==============================================\n")
+	print("\n==============================================\n")
 
 	pygame.quit()
