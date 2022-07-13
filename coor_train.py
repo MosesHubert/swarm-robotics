@@ -1,5 +1,4 @@
 import pygame
-import random
 from matrix import *
 from constants import *
 from uiParameters import *
@@ -9,11 +8,12 @@ pygame.init()
 speed = 0.005
 fps = 60
 n = 4
+target = [(537,120), (480,177), (423,120), (480,63)] # [(520,80), (520,160), (440,80), (440,160)]
 
 flock = []
-for i in range(n):
+for i,j in zip(range(n), target):
 	name = "Agent " + str(i+1)
-	flock.append(Simulator(agent_name=name))
+	flock.append(Simulator(agent_name=name, target_x=j[0], target_y=j[1]))
 
 for boid in flock:
 	boid.create_Q()
@@ -39,10 +39,10 @@ for episode in range(episodes):
 	run = True
 	sim_time = 900 # 1 episode = 15 detik
 
-	flock[0].start(200,320)
-	flock[1].start(200,400)
-	flock[2].start(120,320)
-	flock[3].start(120,400)
+	flock[0].start(217,360) # (200,320)
+	flock[1].start(160,417) # (200,400)
+	flock[2].start(103,360) # (120,320)
+	flock[3].start(160,303) # (120,400)
 
 	for boid in flock:
 		boid.current_state(flock, Width, Height)
@@ -68,6 +68,7 @@ for episode in range(episodes):
 		n = numberInput.value
 
 		flock[0].draw_target(window)
+		flock[0].draw_obstacle(window)
 
 		for boid in flock:
 			boid.behaviour(Width, Height)

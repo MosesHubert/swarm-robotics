@@ -4,11 +4,11 @@ from matrix import *
 from random import uniform
 
 class Simulator:
-    def __init__(self,agent_name):
+    def __init__(self, agent_name, target_x, target_y):
         self.position     = Vector()
         self.velocity     = Vector()
         self.acceleration = Vector()
-        self.target       = Vector(480,120)
+        self.target       = Vector(target_x, target_y) # (480,120)
         self.angle        = 0
 
         self.white  = (225, 225, 225)
@@ -21,12 +21,14 @@ class Simulator:
         self.grey   = ( 30,  30,  30)
         self.stroke = 5
 
-        self.max_speed  = 1
+        self.max_speed  = 2
         self.max_length = 1
 
-        self.size = 20
-        self.lowlim = 50
-        self.uplim = 90
+        self.size     =  20
+        self.lowlim   =  50
+        self.uplim    =  90
+        self.obstacle =  60
+        self.termin   = 100
 
         self.values = {"separation" : 0.1,
                        "alignment"  : 0.05,
@@ -58,8 +60,14 @@ class Simulator:
         
         self.mode = ''
 
-        self.my_font = pygame.font.SysFont('Arial', 12)
-        self.text_agent = self.my_font.render(agent_name, False, self.white)
+        self.font1 = pygame.font.SysFont('Arial', 12)
+        self.font2 = pygame.font.SysFont('Arial', 18, bold=True)
+        self.font3 = pygame.font.SysFont('Arial', 36, bold=True)
+
+        self.text_agent    = self.font1.render(agent_name, False, self.white)
+        self.text_obstacle = self.font2.render('OBSTACLE', False, self.black)
+        self.termin_start  = self.font3.render('START', False, self.black)
+        self.termin_finish = self.font3.render('FINISH', False, self.black)
     
     def start(self, x, y):
         self.position = Vector(x, y)
@@ -104,6 +112,22 @@ class Simulator:
             steering = steering * self.max_speed
             steering = steering - self.velocity.Normalize()
             steering.limit(self.max_length)
+        return steering
+
+    def avoid_obstacle(self, width, height):
+        steering = Vector()
+        center = Vector((width+1)/2,(height+1)/2)
+        dist = getDistance(center, self.position)
+
+        if dist <= self.uplim and dist > self.obstacle:
+            temp = SubVectors(self.position, center)
+            temp = temp / (dist ** 2)
+            steering.add(temp)
+
+        steering.normalize()
+        steering = steering * self.max_speed
+        steering = steering - self.velocity.Normalize()
+        steering.limit(self.max_length)
         return steering
 
     def separation(self, flockMates):
@@ -197,6 +221,10 @@ class Simulator:
         wander = wander * 3
         self.acceleration.add(wander)
 
+        avoid = self.avoid_obstacle(width, height)
+        avoid = avoid * 1
+        self.acceleration.add(avoid)
+
         target = self.to_target()
         target = target * self.values["to_target"]
         self.acceleration.add(target)
@@ -205,10 +233,17 @@ class Simulator:
         self.position += self.velocity
         self.velocity += self.acceleration
         self.velocity.limit(self.max_speed)
-        self.angle = self.velocity.heading() + np.pi/2
+        self.angle = self.velocity.heading() + np.pi/2 # butuh transisi
 
     def draw_target(self, screen):
-        pygame.draw.circle(screen, self.grey, (480, 120), self.uplim)
+        pygame.draw.circle(screen, self.grey, (480, 120), self.termin)
+        pygame.draw.circle(screen, self.grey, (160, 360), self.termin)
+        screen.blit(self.termin_start, (100, 345))
+        screen.blit(self.termin_finish, (420, 105))
+
+    def draw_obstacle(self, screen):
+        pygame.draw.circle(screen, self.white, (320,240), self.obstacle)
+        screen.blit(self.text_obstacle, (270,235))
     
     def Draw(self, screen, distance=5, scale=2):
         ps = []
