@@ -1,12 +1,11 @@
 import numpy as np
-import pandas as pd
 from simulation.Vector import *
 from simulation.Sensor import Sensor
 from simulation.Behavior import Behavior
-from simulation.Environment import Environment
+from implementation.VirtualEnvironment import VirtualEnvironment
 
-class Agent:
-    def __init__(self, arena, agents, num_x, width, height, agent_name, target_x, target_y, inner, outer, max_speed, max_length, starting_angle, obstacle_position, obstacle_radius, text_font, agent_text_size, agent_color, agent_size, epsilon, learning_rate, discount_factor, separation_magnitude, alignment_magnitude, cohesion_magnitude):
+class testAgent:
+    def __init__(self, arena, agents, matrix_file, num_x, width, height, agent_name, target_x, target_y, start_x, start_y, inner, outer, max_speed, max_length, starting_angle, obstacle_position, obstacle_radius, text_font, agent_text_size, agent_color, agent_size, epsilon, learning_rate, discount_factor, separation_magnitude, alignment_magnitude, cohesion_magnitude):
         self.arena = arena
         self.inner = inner
         self.outer = outer
@@ -17,7 +16,7 @@ class Agent:
         self.sum_error = 0
 
         self.target_position = Vector(target_x, target_y)
-        self.position = Vector()
+        self.position = Vector(start_x, start_y)
         self.velocity = Vector()
         self.acceleration = Vector()
 
@@ -29,13 +28,12 @@ class Agent:
 
         self.sensor = Sensor(self.arena, self.agent_name, inner, outer, text_font, agent_text_size, agent_color, agent_size, self.angle)
         self.behavior = Behavior(self.target_position, width, height, max_speed, max_length, self.inner, self.outer, obstacle_radius)
-        self.environment = Environment(agents, epsilon, learning_rate, discount_factor, obstacle_position, obstacle_radius, separation_magnitude, cohesion_magnitude, alignment_magnitude, max_speed, max_length, width, height, inner, outer, agent_size)
-        self.environment.create_Q_matrix()
+        self.environment = VirtualEnvironment(agents, epsilon, learning_rate, discount_factor, obstacle_position, obstacle_radius, separation_magnitude, cohesion_magnitude, alignment_magnitude, max_speed, max_length, width, height, inner, outer, agent_size)
+        self.environment.import_Q_matrix(matrix_file)
 
-    def reset(self, start_x, start_y):
+    def reset(self):
         self.crash = False
         self.finish = False
-        self.position = Vector(start_x, start_y)
         self.sum_error = 0
 
     def get_first_state_action(self, self_agent):
@@ -48,16 +46,19 @@ class Agent:
     def get_current_state(self, self_agent):
         self.environment.update_state(self_agent, self.position)
         self.state = self.environment.state
+        # print(f'{self.agent_name} > State: {self.state}')
 
     def get_next_state(self, self_agent):
         self.environment.update_next_state(self_agent, self.position)
         self.next_state = self.environment.next_state
+        # print(f'{self.agent_name} > Next State: {self.next_state}')
 
     def get_next_action(self):
         if self.state != self.next_state:
             self.environment.get_action()
             self.action = self.environment.action
             self.mode = self.environment.mode
+            print(self.agent_name + ' => State: ' + self.environment.states[self.next_state] + ',\tAction: ' + self.environment.actions[self.action])
 
     def crashing(self, agents):
         obstacle = Vector(self.obstacle_position[0], self.obstacle_position[1])
@@ -104,17 +105,11 @@ class Agent:
             self.position += self.velocity
             self.angle = self.velocity.heading() + np.pi/2
 
-    def update_matrix_values(self, episode, track_version, obstacle_version):
-        if self.state != self.next_state:
-            q_matrix = self.environment.update_Q_matrix()
-            np.savetxt('q_matrix/' + self.agent_name.lower().replace(' ', '_') + '_t{}o{}'.format(track_version, obstacle_version) + ".csv", q_matrix, delimiter=",")
-            print(self.agent_name + ' (Episode {}) => State: '.format(episode+1) + self.environment.states[self.next_state] + ',\tMode: ' + self.mode + ',\tAction: ' + self.environment.actions[self.action])
-
     def draw_agent(self, inner_color, outer_color, head_color, state_color, action_color, mode_color):
         self.sensor.draw_sensor(self.position, self.environment.states[self.next_state], self.environment.actions[self.action], self.mode, inner_color, outer_color, head_color, state_color, action_color, mode_color, self.angle)
 
-    def show_output(self, episode):
-        print(self.agent_name + ' (Episode {}) => State: '.format(episode+1) + self.environment.states[self.state] + ',\tMode: ' + self.mode + ',\tAction: ' + self.environment.actions[self.action])
+    def show_output(self):
+        print(self.agent_name + ' => State: ' + self.environment.states[self.state] + ',\tAction: ' + self.environment.actions[self.action])
 
     def is_terminal_state(self, agents):
         total = 0
@@ -131,24 +126,3 @@ class Agent:
             return 1
         else:
             return 0
-
-    def df_Q_values(self):
-        self.Q_crash = pd.DataFrame(self.environment.Q_values[0]).transpose()
-        self.Q_close = pd.DataFrame(self.environment.Q_values[1]).transpose()
-        self.Q_nearby = pd.DataFrame(self.environment.Q_values[2]).transpose()
-        self.Q_alone = pd.DataFrame(self.environment.Q_values[3]).transpose()
-        self.Q_lost = pd.DataFrame(self.environment.Q_values[4]).transpose()
-
-    def append_Q_values(self):
-        self.Q_crash = pd.concat([self.Q_crash, pd.DataFrame(self.environment.Q_values[0]).transpose()], ignore_index=True)
-        self.Q_close = pd.concat([self.Q_close, pd.DataFrame(self.environment.Q_values[1]).transpose()], ignore_index=True)
-        self.Q_nearby = pd.concat([self.Q_nearby, pd.DataFrame(self.environment.Q_values[2]).transpose()], ignore_index=True)
-        self.Q_alone = pd.concat([self.Q_alone, pd.DataFrame(self.environment.Q_values[3]).transpose()], ignore_index=True)
-        self.Q_lost = pd.concat([self.Q_lost, pd.DataFrame(self.environment.Q_values[4]).transpose()], ignore_index=True)
-    
-    def save_Q_values(self, track_version, obstacle_version):
-        self.Q_crash.to_csv('q_values/' + self.agent_name.lower().replace(' ', '_') + '_t{}o{}_crash'.format(track_version, obstacle_version) + ".csv", index=False)
-        self.Q_close.to_csv('q_values/' + self.agent_name.lower().replace(' ', '_') + '_t{}o{}_close'.format(track_version, obstacle_version) + ".csv", index=False)
-        self.Q_nearby.to_csv('q_values/' + self.agent_name.lower().replace(' ', '_') + '_t{}o{}_nearby'.format(track_version, obstacle_version) + ".csv",  index=False)
-        self.Q_alone.to_csv('q_values/' + self.agent_name.lower().replace(' ', '_') + '_t{}o{}_alone'.format(track_version, obstacle_version) + ".csv", index=False)
-        self.Q_lost.to_csv('q_values/' + self.agent_name.lower().replace(' ', '_') + '_t{}o{}_lost'.format(track_version, obstacle_version) + ".csv", index=False)

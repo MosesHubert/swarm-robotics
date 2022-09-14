@@ -1,4 +1,4 @@
-from math import sqrt, atan2
+import numpy as np
 
 class Vector:
 	def __init__(self, x=0, y=0):
@@ -33,7 +33,7 @@ class Vector:
 		return (int(self.x), int(self.y))
 
 	def magnitude(self):
-		return sqrt(self.x * self.x + self.y * self.y)
+		return np.sqrt(self.x * self.x + self.y * self.y)
 
 	def normalize(self):
 		mag = self.magnitude()
@@ -48,14 +48,14 @@ class Vector:
 			return Vector(1, 1)
 
 	def heading(self):
-		angle = atan2(self.y, self.x)
+		angle = np.arctan2(self.y, self.x)
 		return angle
 
 	def limit(self, max_length):
 		squared_mag = self.magnitude() * self.magnitude()
 		if squared_mag > (max_length * max_length):
-			self.x = self.x/sqrt(squared_mag)
-			self.y = self.y/sqrt(squared_mag)
+			self.x = self.x/np.sqrt(squared_mag)
+			self.y = self.y/np.sqrt(squared_mag)
 			self.x = self.x * max_length
 			self.y = self.y * max_length
 		
@@ -66,13 +66,18 @@ class Vector:
 	def __repr__(self):
 		return f'vector-> x:{self.x}, y:{self.y}'
 	
-	def cart2pol(x, y):
-		rho = sqrt(x**2 + y**2)
-		phi = atan2(y, x)
-		return rho, phi
+def cart2pol(x, y):
+	rho = np.sqrt(x**2 + y**2)
+	phi = np.arctan2(y, x)
+	return rho, phi
+
+def pol2cart(rho, phi):
+    x = rho * np.cos(phi)
+    y = rho * np.sin(phi)
+    return x, y
 
 def getDistance(v1, v2):
-	return sqrt((v2.x - v1.x)*(v2.x - v1.x) + (v2.y -v1.y)*(v2.y - v1.y))
+	return np.sqrt((v2.x - v1.x)*(v2.x - v1.x) + (v2.y -v1.y)*(v2.y - v1.y))
 
 def AddVectors(v1, v2):
 	return Vector(v1.x + v2.x, v1.y + v2.y)
