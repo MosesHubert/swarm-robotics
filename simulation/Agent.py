@@ -71,7 +71,7 @@ class Agent:
 
     def arriving(self):
         dist = getDistance(self.position, self.target_position)
-        if dist >= 0 and dist <= 5:
+        if dist >= 0 and dist <= 10: # 13.5
             self.finish = True
 
     def update_acceleration(self, self_agent, agents, wander, avoid, target):
@@ -100,15 +100,11 @@ class Agent:
 
     def update_kinematics(self, Kp, Ki, a0, a1, b1, dt):
         if self.crash is False and self.finish is False:
-            # self.velocity.limit(self.max_speed)
-            # speed_set_point = self.velocity.magnitude() * 0.3683 * 0.01
             speed_set_point = self.acceleration.magnitude() * 0.3683 * 0.01
             speed_out, mv = self.dynamic(speed_set_point, Kp, Ki, a0, a1, b1, dt)
             max_heading = 188.7 * dt
             acc_heading = self.acceleration.heading() * 180 / np.pi
-            print(acc_heading)
             vel_heading = self.velocity.heading() * 180 / np.pi
-            print(vel_heading)
 
             if vel_heading >= 0:
                 if acc_heading >= 0:
@@ -137,7 +133,7 @@ class Agent:
                     else:
                         vel_heading = acc_heading
 
-            print(f"{self.agent_name} -> SP : {speed_set_point:.4f}\t PV : {speed_out:.4f}\t MV : {int(mv*255)}\t heading : {int(vel_heading):.4f}")
+            # print(f"{self.agent_name} -> SP : {speed_set_point:.4f}\t PV : {speed_out:.4f}\t MV : {int(mv*255)}\t heading : {vel_heading:.4f}")
             vel_x, vel_y = pol2cart(speed_out, vel_heading * np.pi / 180)
             self.velocity = Vector(vel_x, vel_y) / 0.3683 / 0.01
             self.position += self.velocity * dt
