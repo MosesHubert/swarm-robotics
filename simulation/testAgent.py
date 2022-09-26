@@ -76,11 +76,14 @@ class testAgent:
             self.finish = True
 
     def update_acceleration(self, self_agent, agents, wander, avoid, target):
-        self.acceleration.reset()
-        self.acceleration += self.behavior.update_behavior(self.position, self.velocity, self.obstacle_position, wander, avoid, target)
-        self.acceleration += self.environment.update_action(self_agent, self.position, self.velocity)
         self.crashing(agents)
         self.arriving()
+        if self.crash is False and self.finish is False:
+            self.acceleration.reset()
+            self.acceleration += self.behavior.update_behavior(self.position, self.velocity, self.obstacle_position, wander, avoid, target)
+            self.acceleration += self.environment.update_action(self_agent, self.position, self.velocity)
+        else:
+            self.acceleration.reset()
 
     def dynamic(self, speed_set_point, Kp, Ki, a0, a1, b1, dt):
         x_k_min2 = self.data_x[self.num_x-1]
@@ -136,7 +139,7 @@ class testAgent:
                     else:
                         vel_heading = acc_heading
 
-            print(f"{self.agent_name} -> SP : {speed_set_point:.4f}\t PV : {speed_out:.4f}\t MV : {int(mv*255)}\t heading : {int(vel_heading)}")
+            # print(f"{self.agent_name} -> SP : {speed_set_point:.4f}\t PV : {speed_out:.4f}\t MV : {int(mv*255)}\t heading : {int(vel_heading)}")
             vel_x, vel_y = pol2cart(speed_out, vel_heading * np.pi / 180)
             self.velocity = Vector(vel_x, vel_y) / 0.3683 / 0.01
             self.position += self.velocity * dt
@@ -159,7 +162,7 @@ class testAgent:
                     if dist >= 2 * self.sensor.agent_size and dist <= self.outer + self.sensor.agent_size:
                         total += 1
 
-        if total == len(agents)-2:
+        if total >= len(agents)-2:
             return 1
         else:
             return 0

@@ -12,36 +12,33 @@ class Behavior:
         self.obstacle = obstacle
 
     def frame_boundaries(self, position, velocity):
-        total = 0
+        # total = 0
         steering = Vector()
         
         if position.x >= self.width - 50:
             if velocity.x >= 0:
-                vel = SubVectorsX(steering, velocity)
-                steering.add(vel)
-                total += 1
+                vn = SubVectorsX(steering, velocity)
+                vn.normalize()
+                steering.add(vn)
         elif position.x <= 50:
             if velocity.x <= 0:
-                vel = SubVectorsX(steering, velocity)
-                steering.add(vel)
-                total += 1
+                vn = SubVectorsX(steering, velocity)
+                vn.normalize()
+                steering.add(vn)
 
         if position.y >= self.height - 50:
             if velocity.y >= 0:
-                vel = SubVectorsY(steering, velocity)
-                steering.add(vel)
-                total += 1
+                vn = SubVectorsY(steering, velocity)
+                vn.normalize()
+                steering.add(vn)
         elif position.y <= 50:
             if velocity.y <= 0:
-                vel = SubVectorsY(steering, velocity)
-                steering.add(vel)
-                total += 1
+                vn = SubVectorsY(steering, velocity)
+                vn.normalize()
+                steering.add(vn)
 
-        if total > 0:
-            steering.normalize()
-            steering = steering * self.max_speed
-            steering = steering - velocity
-            steering.limit(self.max_length)
+        steering = steering * self.max_speed
+        steering.limit(self.max_length)
 
         return steering
 
@@ -50,32 +47,25 @@ class Behavior:
         center = Vector(obstacle_position[0], obstacle_position[1])
         dist = getDistance(center, position)
 
-        if dist <= self.outer and dist > self.obstacle:
-            temp = SubVectors(position, center)
-            steering.add(temp)
+        if dist <= self.outer + self.obstacle and dist > self.obstacle:
+            vn = SubVectors(position, center)
+            vn.normalize
+            vn = vn / dist
+            steering.add(vn)
 
-        steering.normalize()
         steering = steering * self.max_speed
-        steering = steering - velocity
         steering.limit(self.max_length)
 
         return steering
 
     def target_force(self, position, velocity):
-        total = 0
         steering = Vector()
 
-        dist = getDistance(self.target, position)
-        if dist != 0:
-            orient = SubVectors(self.target, position)
-            steering.add(orient)
-            total += 1
+        vn = SubVectors(self.target, position)
+        steering.add(vn)
 
-        if total > 0:
-            steering.normalize()
-            steering = steering * self.max_speed
-            steering = steering - velocity
-            steering.limit(self.max_length)
+        steering = steering * self.max_speed
+        steering.limit(self.max_length)
 
         return steering
 

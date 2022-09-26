@@ -5,8 +5,8 @@ from simulation.State import State
 from simulation.Action import Action
 
 class Environment:
-    def __init__(self, agents, epsilon, learning_rate, discount_factor, obstacle_position, obstacle_radius, separation_magnitude, cohesion_magnitude, alignment_magnitude, max_speed, max_length, width, height, inner_sensor, outer_sensor, agent_size):
-        self.action_class = Action(agents, max_speed, max_length, separation_magnitude, alignment_magnitude, cohesion_magnitude)
+    def __init__(self, agents, outer, epsilon, learning_rate, discount_factor, obstacle_position, obstacle_radius, separation_magnitude, cohesion_magnitude, alignment_magnitude, max_speed, max_length, width, height, inner_sensor, outer_sensor, agent_size):
+        self.action_class = Action(agents, outer, max_speed, max_length, separation_magnitude, alignment_magnitude, cohesion_magnitude)
         self.state_class = State(width, height, inner_sensor, outer_sensor, agent_size, obstacle_position, obstacle_radius)
         self.agents = agents
         self.epsilon = epsilon
@@ -70,19 +70,19 @@ class Environment:
             avoid = self.action_class.get_separation(self_agent, position, velocity)
             steering.add(avoid)
         elif self.actions[self.action] == 'Alignment' and self.state == 0:
-            align = self.action_class.get_alignment(self_agent, velocity)
+            align = self.action_class.get_alignment(self_agent, position, velocity)
             steering.add(align)
         elif self.actions[self.action] == 'Alignment' and self.state == 1:
-            align = self.action_class.get_alignment(self_agent, velocity)
+            align = self.action_class.get_alignment(self_agent, position, velocity)
             steering.add(align)
         elif self.actions[self.action] == 'Alignment' and self.state == 2:
-            align = self.action_class.get_alignment(self_agent, velocity)
+            align = self.action_class.get_alignment(self_agent, position, velocity)
             steering.add(align)
         elif self.actions[self.action] == 'Alignment' and self.state == 3:
-            align = self.action_class.get_alignment(self_agent, velocity)
+            align = self.action_class.get_alignment(self_agent, position, velocity)
             steering.add(align)
         elif self.actions[self.action] == 'Alignment' and self.state == 4:
-            align = self.action_class.get_alignment(self_agent, velocity)
+            align = self.action_class.get_alignment(self_agent, position, velocity)
             steering.add(align)
         elif self.actions[self.action] == 'Cohesion' and self.state == 0:
             gather = self.action_class.get_cohesion(self_agent, position, velocity)
@@ -102,27 +102,27 @@ class Environment:
         elif self.actions[self.action] == 'Separation-Alignment' and self.state == 0:
             avoid = self.action_class.get_separation(self_agent, position, velocity)
             steering.add(avoid)
-            align = self.action_class.get_alignment(self_agent, velocity)
+            align = self.action_class.get_alignment(self_agent, position, velocity)
             steering.add(align)
         elif self.actions[self.action] == 'Separation-Alignment' and self.state == 1:
             avoid = self.action_class.get_separation(self_agent, position, velocity)
             steering.add(avoid)
-            align = self.action_class.get_alignment(self_agent, velocity)
+            align = self.action_class.get_alignment(self_agent, position, velocity)
             steering.add(align)
         elif self.actions[self.action] == 'Separation-Alignment' and self.state == 2:
             avoid = self.action_class.get_separation(self_agent, position, velocity)
             steering.add(avoid)
-            align = self.action_class.get_alignment(self_agent, velocity)
+            align = self.action_class.get_alignment(self_agent, position, velocity)
             steering.add(align)
         elif self.actions[self.action] == 'Separation-Alignment' and self.state == 3:
             avoid = self.action_class.get_separation(self_agent, position, velocity)
             steering.add(avoid)
-            align = self.action_class.get_alignment(self_agent, velocity)
+            align = self.action_class.get_alignment(self_agent, position, velocity)
             steering.add(align)
         elif self.actions[self.action] == 'Separation-Alignment' and self.state == 4:
             avoid = self.action_class.get_separation(self_agent, position, velocity)
             steering.add(avoid)
-            align = self.action_class.get_alignment(self_agent, velocity)
+            align = self.action_class.get_alignment(self_agent, position, velocity)
             steering.add(align)
         elif self.actions[self.action] == 'Separation-Cohesion' and self.state == 0:
             avoid = self.action_class.get_separation(self_agent, position, velocity)
@@ -150,62 +150,62 @@ class Environment:
             gather = self.action_class.get_cohesion(self_agent, position, velocity)
             steering.add(gather)
         elif self.actions[self.action] == 'Alignment-Cohesion' and self.state == 0:
-            align = self.action_class.get_alignment(self_agent, velocity)
+            align = self.action_class.get_alignment(self_agent, position, velocity)
             steering.add(align)
             gather = self.action_class.get_cohesion(self_agent, position, velocity)
             steering.add(gather)
         elif self.actions[self.action] == 'Alignment-Cohesion' and self.state == 1:
-            align = self.action_class.get_alignment(self_agent, velocity)
+            align = self.action_class.get_alignment(self_agent, position, velocity)
             steering.add(align)
             gather = self.action_class.get_cohesion(self_agent, position, velocity)
             steering.add(gather)
         elif self.actions[self.action] == 'Alignment-Cohesion' and self.state == 2:
-            align = self.action_class.get_alignment(self_agent, velocity)
+            align = self.action_class.get_alignment(self_agent, position, velocity)
             steering.add(align)
             gather = self.action_class.get_cohesion(self_agent, position, velocity)
             steering.add(gather)
         elif self.actions[self.action] == 'Alignment-Cohesion' and self.state == 3:
-            align = self.action_class.get_alignment(self_agent, velocity)
+            align = self.action_class.get_alignment(self_agent, position, velocity)
             steering.add(align)
             gather = self.action_class.get_cohesion(self_agent, position, velocity)
             steering.add(gather)
         elif self.actions[self.action] == 'Alignment-Cohesion' and self.state == 4:
-            align = self.action_class.get_alignment(self_agent, velocity)
+            align = self.action_class.get_alignment(self_agent, position, velocity)
             steering.add(align)
             gather = self.action_class.get_cohesion(self_agent, position, velocity)
             steering.add(gather)
         elif self.actions[self.action] == 'Separation-Alignment-Cohesion' and self.state == 0:
             avoid = self.action_class.get_separation(self_agent, position, velocity)
             steering.add(avoid)
-            align = self.action_class.get_alignment(self_agent, velocity)
+            align = self.action_class.get_alignment(self_agent, position, velocity)
             steering.add(align)
             gather = self.action_class.get_cohesion(self_agent, position, velocity)
             steering.add(gather)
         elif self.actions[self.action] == 'Separation-Alignment-Cohesion' and self.state == 1:
             avoid = self.action_class.get_separation(self_agent, position, velocity)
             steering.add(avoid)
-            align = self.action_class.get_alignment(self_agent, velocity)
+            align = self.action_class.get_alignment(self_agent, position, velocity)
             steering.add(align)
             gather = self.action_class.get_cohesion(self_agent, position, velocity)
             steering.add(gather)
         elif self.actions[self.action] == 'Separation-Alignment-Cohesion' and self.state == 2:
             avoid = self.action_class.get_separation(self_agent, position, velocity)
             steering.add(avoid)
-            align = self.action_class.get_alignment(self_agent, velocity)
+            align = self.action_class.get_alignment(self_agent, position, velocity)
             steering.add(align)
             gather = self.action_class.get_cohesion(self_agent, position, velocity)
             steering.add(gather)
         elif self.actions[self.action] == 'Separation-Alignment-Cohesion' and self.state == 3:
             avoid = self.action_class.get_separation(self_agent, position, velocity)
             steering.add(avoid)
-            align = self.action_class.get_alignment(self_agent, velocity)
+            align = self.action_class.get_alignment(self_agent, position, velocity)
             steering.add(align)
             gather = self.action_class.get_cohesion(self_agent, position, velocity)
             steering.add(gather)
         elif self.actions[self.action] == 'Separation-Alignment-Cohesion' and self.state == 4:
             avoid = self.action_class.get_separation(self_agent, position, velocity)
             steering.add(avoid)
-            align = self.action_class.get_alignment(self_agent, velocity)
+            align = self.action_class.get_alignment(self_agent, position, velocity)
             steering.add(align)
             gather = self.action_class.get_cohesion(self_agent, position, velocity)
             steering.add(gather)

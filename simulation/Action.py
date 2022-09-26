@@ -1,8 +1,9 @@
 from simulation.Vector import *
 
 class Action:
-    def __init__(self, agents, max_speed, max_length, separation_magnitude, alignment_magnitude, cohesion_magnitude):
+    def __init__(self, agents, outer, max_speed, max_length, separation_magnitude, alignment_magnitude, cohesion_magnitude):
         self.agents = agents
+        self.outer = outer
         self.max_speed = max_speed
         self.max_length = max_length
         self.separation_magnitude = separation_magnitude
@@ -10,24 +11,19 @@ class Action:
         self.cohesion_magnitude = cohesion_magnitude
 
     def separation(self, self_agent, position, velocity):
-        total = 0
         steering = Vector()
 
         for agent in self.agents:
             dist = getDistance(position, agent.position)
-            if agent is not self_agent: #and dist <= self.outer:
+            if agent is not self_agent and dist <= self.outer:
                 vn = SubVectors(position, agent.position)
                 vn.normalize()
-                # vn = vn / dist
-                vn = vn / (dist ** 2)
+                vn = vn / dist
                 steering.add(vn)
-                total += 1
-        if total > 0:
-            steering = steering / total
-            steering.normalize()
-            steering = steering * self.max_speed
-            steering = steering - velocity
-            steering.limit(self.max_length)
+
+        steering = steering * self.max_speed
+        steering.limit(self.max_length)
+
         return steering
 
     def get_separation(self, self_agent, position, velocity):
@@ -35,47 +31,44 @@ class Action:
         avoid = avoid * self.separation_magnitude
         return avoid
 
-    def alignment(self, self_agent, velocity):
+    def alignment(self, self_agent, position, velocity):
         total = 0
         steering = Vector()
 
         for agent in self.agents:
-            if agent is not self_agent:
-                vel = agent.velocity.Normalize()
-                steering.add(vel)
+            dist = getDistance(position, agent.position)
+            if agent is not self_agent and dist <= self.outer:
+                vn = agent.velocity
+                steering.add(vn)
                 total += 1
         if total > 0:
             steering = steering / total
-            steering.normalize()
             steering = steering * self.max_speed
-            steering = steering - velocity.Normalize()
             steering.limit(self.max_length)
+
         return steering
 
-    def get_alignment(self, self_agent, velocity):
-        align = self.alignment(self_agent, velocity)
+    def get_alignment(self, self_agent, position, velocity):
+        align = self.alignment(self_agent, position, velocity)
         align = align * self.alignment_magnitude
         return align
 
     def cohesion(self, self_agent, position, velocity):
         total = 0
         steering = Vector()
-        min_dist = 1000
 
         for agent in self.agents:
             dist = getDistance(position, agent.position)
-            if agent is not self_agent:
-                if dist < min_dist:
-                    min_dist = dist
-                    coh = agent.position
-                    steering.add(coh)
-                    total += 1
+            if agent is not self_agent and dist <= self.outer:
+                vn = agent.position
+                steering.add(vn)
+                total += 1
+
         if total > 0:
-            steering = steering - position
-            steering.normalize()
+            steering = steering / total
             steering = steering * self.max_speed
-            steering = steering - velocity
             steering.limit(self.max_length)
+
         return steering
 
     def get_cohesion(self, self_agent, position, velocity):
