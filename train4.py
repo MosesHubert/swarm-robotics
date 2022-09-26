@@ -1,4 +1,4 @@
-import timeit
+import time
 import pygame
 from parameters4 import *
 from simulation import Agent, Arena
@@ -19,14 +19,12 @@ dynamics_attribute = [[Kp_red, Ki_red, a0_red, a1_red, b1_red],
 
 # simulation
 first = True
-simulation_time = 0
 run_simulation = True
 episodes = number_of_episodes
 print('\n------------- Start Simulation -------------\n')
 
 for episode in range(episodes):
     run_episode = True
-    is_terminal = number_of_agents
     time_limit = episode_time * frame_per_second
 
     # reset agent position
@@ -50,11 +48,11 @@ for episode in range(episodes):
             agent.update_acceleration(agent, agents, wander_magnitude, avoid_magnitude, target_magnitude)
 
         # update position and velocity
-        time_interval = timeit.timeit()
         for agent, dynamic in zip(agents, dynamics_attribute):
-            agent.update_kinematics(dynamic[0], dynamic[1], dynamic[2], dynamic[3], dynamic[4], time_interval)
+            agent.update_kinematics(dynamic[0], dynamic[1], dynamic[2], dynamic[3], dynamic[4], delta_time)
 
         # get new state and new action, update Q-values, and draw agents
+        is_terminal = number_of_agents
         for agent in agents:
             agent.get_next_state(agent)
             agent.get_next_action()
@@ -68,6 +66,9 @@ for episode in range(episodes):
         time_limit -= 1
         if time_limit == 0:
             run_episode = False
+
+        # delay for dt
+        time.sleep(loop_delay)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

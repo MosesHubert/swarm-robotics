@@ -31,7 +31,7 @@ bb8_green = BB8_driver.Sphero('C8:88:28:09:8F:1D')
 bb8_green.connect()
 bb8_green.start()
 time.sleep(1.0)
-bb8_green.set_rgb_led(0, 220, 140, 0, True)
+bb8_green.set_rgb_led(0, 230, 140, 0, True)
 print("\nRobot hijau siap.\n")
 
 def sensor():
@@ -78,7 +78,7 @@ def sensor():
         thresh_red = cv2.inRange(hsv_red, low_red, high_red)
 
         # erosion-dilation
-        dil_red = cv2.dilate(thresh_red, kernel_dil, iterations=1)
+        dil_red = cv2.dilate(thresh_red, kernel_dil, iterations=2)
         eros_red = cv2.erode(dil_red, kernel_eros, iterations=1)
 
         # menemukan kontur
@@ -105,11 +105,11 @@ def sensor():
         thresh_green = cv2.inRange(hsv_green, low_green, high_green)
 
         # erosion-dilation
-        dil_green = cv2.dilate(thresh_green, kernel_dil, iterations=1)
-        eros_green = cv2.erode(dil_green, kernel_eros, iterations=1)
+        # eros_green = cv2.erode(thresh_green, kernel_eros, iterations=1)
+        dil_green = cv2.dilate(thresh_green, kernel_dil, iterations=2)
 
         # menemukan kontur
-        _, kontur_green, _ = cv2.findContours(eros_green,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
+        _, kontur_green, _ = cv2.findContours(dil_green,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
 
         # menemukan titik tengah dari kontur
         area_maksimal_green = 0
@@ -128,8 +128,8 @@ def sensor():
         cv2.circle(frame, (cx_red, cy_red), 10, 255, -1)
         cv2.circle(frame, (cx_green, cy_green), 10, 255, -1)
         cv2.imshow('Real', frame)
-        cv2.imshow('BB-8 Merah', thresh_red)
-        cv2.imshow('BB-8 Hijau', thresh_green)
+        cv2.imshow('BB-8 Merah', eros_red)
+        cv2.imshow('BB-8 Hijau', dil_green)
 
         ########## MENGHITUNG KECEPATAN ##########
 
@@ -155,7 +155,7 @@ def sensor():
 
         k = cv2.waitKey(1)
         if k % 256 == 27:
-            break
+            run = False
 
 def virtual_sensor():
 

@@ -1,10 +1,13 @@
+from turtle import delay
 from simulation.Vector import middle_point
 
 # simulation parameters
 number_of_agents   = 4
-frame_per_second   = 60
-number_of_episodes = 10
-episode_time       = 10 # in seconds
+frame_per_second   = 30
+number_of_episodes = 30
+episode_time       = 6 # * 3 + 1 -> seconds
+delta_time         = 0.1
+loop_delay         = 0.09
 
 # arena size
 width, height = 639, 479
@@ -14,20 +17,20 @@ track_version = int(input('Track version: ')) # insert 1 or 2
 obstacle_version = int(input('Obstacle version: ')) # insert 1, 2, or 3
 
 # agent characteristics
-red_buffer = 5
+red_buffer = 2
 green_buffer = 2
-a0_red = 0.05975
-a1_red = 0.02311
-b1_red = 0.9193
-a0_green = 0.02456
-a1_green = 0.06336
-b1_green = 0.91
+a0_red = 0.141 # x[k-2]
+a1_red = 0.443 # x[k-1]
+b1_red = 0.431 # y[k-1]
+a0_green = 0.04345
+a1_green = 0.3238
+b1_green = 0.6239
 
 # PID parameters
-Kp_red = 1.5144
-Ki_red = 11.2634
-Kp_green = 3.7984
-Ki_green = 16.3255
+Kp_red = 1.288
+Ki_red = 6.4445
+Kp_green = 2.2728
+Ki_green = 7.8173
 
 # agent track version
 '''
@@ -47,10 +50,10 @@ if track_version == 1:
     target_positions = [
         # (450,  80), # agent 1
         # (510, 160)  # agent 2
-        (515, 120), # agent 1
-        (480,  85), # agent 2
-        (480, 155), # agent 3
-        (445, 120)  # agent 4
+        (530, 120), # agent 1
+        (480,  70), # agent 2
+        (480, 170), # agent 3
+        (430, 120)  # agent 4
     ]
 elif track_version == 2:
     start_position = (120, 240)
@@ -66,10 +69,10 @@ elif track_version == 2:
     target_positions = [
         # (520, 190), # agent 1
         # (520, 290)  # agent 2
-        (550, 270), # agent 1
-        (550, 210), # agent 2
-        (490, 270), # agent 3
-        (490, 210)  # agent 4
+        (560, 280), # agent 1
+        (560, 200), # agent 2
+        (480, 280), # agent 3
+        (480, 200)  # agent 4
     ]
 else:
     raise Exception('Please insert 1 or 2.')
@@ -108,14 +111,14 @@ learning_rate = 0.5
 discount_factor = 0.8
 
 # action parameters
-separation_magnitude = 1.5 #0.1
-alignment_magnitude = 1 #0.05
-cohesion_magnitude = 1 #0.05
+separation_magnitude = 40
+alignment_magnitude = 20
+cohesion_magnitude = 20
 
 # behavior parameters
-wander_magnitude = 3 #0.5
-avoid_magnitude = 2.5 #0.4
-target_magnitude = 2 #0.3
+wander_magnitude = 80
+avoid_magnitude = 100
+target_magnitude = 120
 
 # color (in RGB)
 white  = (225, 225, 225)

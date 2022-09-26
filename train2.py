@@ -1,4 +1,3 @@
-import timeit
 import pygame
 from parameters2 import *
 from simulation import Agent, Arena
@@ -47,7 +46,7 @@ for episode in range(episodes):
             agent.update_acceleration(agent, agents, wander_magnitude, avoid_magnitude, target_magnitude)
 
         # update position and velocity
-        time_interval = timeit.timeit()
+        time_interval = 0.035 # timeit.timeit()
         for agent, dynamic in zip(agents, dynamics_attribute):
             agent.update_kinematics(dynamic[0], dynamic[1], dynamic[2], dynamic[3], dynamic[4], time_interval)
 
@@ -58,6 +57,8 @@ for episode in range(episodes):
             agent.update_matrix_values(episode, track_version, obstacle_version)
             agent.draw_agent(red, green, black, yellow, blue, orange)
             is_terminal -= agent.is_terminal_state(agents)
+
+        # time.sleep(time_interval)
 
         if is_terminal == 0:
             run_episode = False

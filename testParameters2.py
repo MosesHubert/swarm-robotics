@@ -76,16 +76,12 @@ elif obstacle_version == 2:
     obstacle_text_size = 13
     obstacle_position = (middle_point(starting_positions[0][0], target_positions[0][0]),
                          middle_point(starting_positions[0][1], target_positions[0][1]))
-    # obstacle_position = (middle_point(starting_positions[3][0], target_positions[2][0]),
-    #                      middle_point(starting_positions[3][1], target_positions[2][1]))
     obstacle_text_position = (obstacle_position[0] - 35, obstacle_position[1] - 5)
 elif obstacle_version == 3:
     obstacle_radius = 40
     obstacle_text_size = 13
     obstacle_position = (middle_point(starting_positions[1][0], target_positions[1][0]),
                          middle_point(starting_positions[1][1], target_positions[1][1]))
-    # obstacle_position = (middle_point(starting_positions[0][0], target_positions[1][0]),
-    #                      middle_point(starting_positions[0][1], target_positions[1][1]))
     obstacle_text_position = (obstacle_position[0] - 35, obstacle_position[1] - 5)
 else:
     raise Exception('Please insert 1, 2, or 3.')
@@ -103,14 +99,14 @@ learning_rate = 0.5
 discount_factor = 0.8
 
 # action parameters
-separation_magnitude = 10 #0.1
-alignment_magnitude = 5 #0.05
-cohesion_magnitude = 5 #0.05
+separation_magnitude = 20 #0.1
+alignment_magnitude = 10 #0.05
+cohesion_magnitude = 10 #0.05
 
 # behavior parameters
-wander_magnitude = 30 #0.5
-avoid_magnitude = 25 #0.4
-target_magnitude = 15 #0.3
+wander_magnitude = 80 #0.5
+avoid_magnitude = 50 #0.4
+target_magnitude = 70 #0.3
 
 # color (in RGB)
 white  = (225, 225, 225)

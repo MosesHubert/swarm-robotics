@@ -59,7 +59,7 @@ def sensor():
     timestamp_now = kamera.get(cv2.CAP_PROP_POS_MSEC)
 
     while run:
-        # start camera and get position
+        # start camera
         _,frame = kamera.read()
         timestamp = kamera.get(cv2.CAP_PROP_POS_MSEC)
         delta_time = (timestamp - timestamp_now) * 0.001
@@ -79,7 +79,7 @@ def sensor():
         thresh_red = cv2.inRange(hsv_red, low_red, high_red)
 
         # erosion-dilation
-        dil_red = cv2.dilate(thresh_red, kernel_dil, iterations=1)
+        dil_red = cv2.dilate(thresh_red, kernel_dil, iterations=2)
         eros_red = cv2.erode(dil_red, kernel_eros, iterations=1)
 
         # menemukan kontur
@@ -106,11 +106,11 @@ def sensor():
         thresh_green = cv2.inRange(hsv_green, low_green, high_green)
 
         # erosion-dilation
-        dil_green = cv2.dilate(thresh_green, kernel_dil, iterations=1)
-        eros_green = cv2.erode(dil_green, kernel_eros, iterations=1)
+        # eros_green = cv2.erode(thresh_green, kernel_eros, iterations=1)
+        dil_green = cv2.dilate(thresh_green, kernel_dil, iterations=2)
 
         # menemukan kontur
-        _, kontur_green, _ = cv2.findContours(eros_green,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
+        _, kontur_green, _ = cv2.findContours(dil_green,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)
 
         # menemukan titik tengah dari kontur
         area_maksimal_green = 0
@@ -126,11 +126,12 @@ def sensor():
 
         ########## MENAMPILKAN HASIL ##########
         
-        cv2.circle(frame, (cx_red, cy_red), 10, 255, -1)
-        cv2.circle(frame, (cx_green, cy_green), 10, 255, -1)
+        cv2.circle(frame, (int(obstacle_position[0]), int(obstacle_position[1])), obstacle_radius, white, -1)
+        cv2.circle(frame, (cx_red, cy_red), 12, (0, 0, 150), 2)
+        cv2.circle(frame, (cx_green, cy_green), 12, (10, 255, 110), 2)
         cv2.imshow('Real', frame)
-        cv2.imshow('BB-8 Merah', thresh_red)
-        cv2.imshow('BB-8 Hijau', thresh_green)
+        # cv2.imshow('BB-8 Merah', eros_red)
+        # cv2.imshow('BB-8 Hijau', dil_green)
 
         ########## MENGHITUNG KECEPATAN ##########
 
@@ -193,11 +194,16 @@ def virtual_sensor():
                             discount_factor, separation_magnitude_vir, alignment_magnitude_vir, cohesion_magnitude_vir))
     dynamics_attribute = [[Kp_red, Ki_red, a0_red, a1_red, b1_red],
                           [Kp_green, Ki_green, a0_green, a1_green, b1_green]]
-    is_terminal = number_of_agents
-    first = True
 
+    # inisialisasi parameter agen
     for agent in agents:
         agent.reset()
+
+    # parameter loop
+    first = True
+    first_real = True
+    first_virtual = True
+    start_time = time.time()
 
     while run:
         # arena pygame
@@ -207,7 +213,7 @@ def virtual_sensor():
         arena.draw_text(obstacle_text_position, start_text_position, target_text_position, testing_text_position)
 
         # get real position
-        positions = [[cx_red, cy_red], [cx_green, cy_green]]        
+        positions = [[cx_red, cy_red], [cx_green, cy_green]]
 
         # get first state and action
         if first:
@@ -231,16 +237,35 @@ def virtual_sensor():
         # get real velocity
         velocities = [velocity_red, velocity_green]
 
+        # get delta time for real agent
+        if first_real:
+            delta_time = time.time() - start_time
+            first_real = False
+        else:
+            delta_time = time.time() - start_time_real
+        start_time_real = time.time()
+        # print(f'Real dt: {delta_time:.4f}')
+
         # update position and velocity real agent
         for agent, control, velocity, position in zip(agents[:2], controller_attribute, velocities, positions):
             agent.update_kinematics(velocity, control[1], control[2], delta_time)
             agent.get_position(position[0], position[1])
 
-        # update position and velocity
+        # get delta time for virtual agent
+        if first_virtual:
+            delta_time = time.time() - start_time
+            first_virtual = False
+        else:
+            delta_time = time.time() - start_time_virtual
+        start_time_virtual = time.time()
+        # print(f'Virtual dt: {delta_time:.4f}')
+
+        # update position and velocity virtual agent
         for agent, dynamic in zip(agents[2:], dynamics_attribute):
             agent.update_kinematics(dynamic[0], dynamic[1], dynamic[2], dynamic[3], dynamic[4], delta_time)
 
         # get new state and new action, update Q-values, and draw agents
+        is_terminal = 2 * number_of_agents
         for agent in agents:
             agent.get_next_state(agent)
             agent.get_next_action()
