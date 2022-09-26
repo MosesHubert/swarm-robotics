@@ -45,7 +45,7 @@ class State:
         for agent in agents:
             dist = getDistance(position, agent.position)
             if agent is not self_agent:
-                if dist > 2 * self.agent_size and dist < self.inner_sensor:
+                if dist > 2 * self.agent_size and dist <= self.inner_sensor + self.agent_size:
                     total += 1
         
         if total > 0:
@@ -57,7 +57,7 @@ class State:
         for agent in agents:
             dist = getDistance(position, agent.position)
             if agent is not self_agent:
-                if dist > 2 * self.agent_size and dist < self.inner_sensor:
+                if dist > 2 * self.agent_size and dist <= self.inner_sensor + self.agent_size:
                     total += 1
         
         if total > 0:
@@ -70,7 +70,7 @@ class State:
         for agent in agents:
             dist = getDistance(position, agent.position)
             if agent is not self_agent:
-                if dist >= self.inner_sensor and dist <= self.outer_sensor:
+                if dist > self.inner_sensor + self.agent_size and dist <= self.outer_sensor + self.agent_size:
                     total += 1
 
         if total > 0:
@@ -82,7 +82,7 @@ class State:
         for agent in agents:
             dist = getDistance(position, agent.position)
             if agent is not self_agent:
-                if dist >= self.inner_sensor and dist <= self.outer_sensor:
+                if dist > self.inner_sensor + self.agent_size and dist <= self.outer_sensor + self.agent_size:
                     total += 1
 
         if total > 0:
@@ -94,7 +94,7 @@ class State:
         
         for agent in agents:
             dist = getDistance(position, agent.position)
-            if agent is not self_agent and dist > self.outer_sensor:
+            if agent is not self_agent and dist > self.outer_sensor + self.agent_size:
                 total += 1
         
         if total == len(agents)-1:
@@ -105,7 +105,7 @@ class State:
         
         for agent in agents:
             dist = getDistance(position, agent.position)
-            if agent is not self_agent and dist > self.outer_sensor:
+            if agent is not self_agent and dist > self.outer_sensor + self.agent_size:
                 total += 1
         
         if total == len(agents)-1:

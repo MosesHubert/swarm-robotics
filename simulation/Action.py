@@ -15,10 +15,12 @@ class Action:
 
         for agent in self.agents:
             dist = getDistance(position, agent.position)
-            if agent is not self_agent:
-                temp = SubVectors(position, agent.position)
-                temp = temp / (dist ** 2)
-                steering.add(temp)
+            if agent is not self_agent: #and dist <= self.outer:
+                vn = SubVectors(position, agent.position)
+                vn.normalize()
+                # vn = vn / dist
+                vn = vn / (dist ** 2)
+                steering.add(vn)
                 total += 1
         if total > 0:
             steering = steering / total
@@ -33,12 +35,11 @@ class Action:
         avoid = avoid * self.separation_magnitude
         return avoid
 
-    def alignment(self, self_agent, position, velocity):
+    def alignment(self, self_agent, velocity):
         total = 0
         steering = Vector()
 
         for agent in self.agents:
-            dist = getDistance(position, agent.position)
             if agent is not self_agent:
                 vel = agent.velocity.Normalize()
                 steering.add(vel)
@@ -51,8 +52,8 @@ class Action:
             steering.limit(self.max_length)
         return steering
 
-    def get_alignment(self, self_agent, position, velocity):
-        align = self.alignment(self_agent, position, velocity)
+    def get_alignment(self, self_agent, velocity):
+        align = self.alignment(self_agent, velocity)
         align = align * self.alignment_magnitude
         return align
 

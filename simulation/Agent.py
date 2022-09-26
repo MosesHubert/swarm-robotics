@@ -35,6 +35,7 @@ class Agent:
     def reset(self, start_x, start_y):
         self.crash = False
         self.finish = False
+        self.clamped = False
         self.position = Vector(start_x, start_y)
         self.sum_error = 0
 
@@ -75,24 +76,50 @@ class Agent:
             self.finish = True
 
     def update_acceleration(self, self_agent, agents, wander, avoid, target):
-        self.acceleration.reset()
-        self.acceleration += self.behavior.update_behavior(self.position, self.velocity, self.obstacle_position, wander, avoid, target)
-        self.acceleration += self.environment.update_action(self_agent, self.position, self.velocity)
         self.crashing(agents)
         self.arriving()
+        if self.crash is False and self.finish is False:
+            self.acceleration.reset()
+            self.acceleration += self.behavior.update_behavior(self.position, self.velocity, self.obstacle_position, wander, avoid, target)
+            self.acceleration += self.environment.update_action(self_agent, self.position, self.velocity)
+        else:
+            self.acceleration.reset()
 
     def dynamic(self, speed_set_point, Kp, Ki, a0, a1, b1, dt):
-        x_k_min2 = self.data_x[self.num_x-2]
-        x_k_min1 = self.data_x[self.num_x-1]
+        x_k_min2 = self.data_x[self.num_x-1]
+        x_k_min1 = self.data_x[self.num_x-2]
         y_k_pos1 = self.data_y
         y_k = a0 * x_k_min2 + a1 * x_k_min1 + b1 * y_k_pos1
         error = speed_set_point - y_k
+        
         self.sum_error += error * dt
         x_k = Kp * error + Ki * self.sum_error
         if x_k < 0:
-            x_k = abs(x_k)
+            x_k = 0
         if x_k > 100/255:
             x_k = 100/255
+
+        # if not self.clamped:
+        #     x_k1 = Kp * error + Ki * self.sum_error
+        # elif self.clamped:
+        #     x_k1 = Kp * error
+        
+        # if x_k1 < 0:
+        #     x_k2 = 0 
+        # if x_k1 > 100/255:
+        #     x_k2 = 100/255
+        # if x_k1 >= 0 and x_k1 <= 100/255:
+        #     x_k2 = x_k1
+        
+        # if x_k1 < 0 and error < 0:
+        #     if x_k1 != x_k2:
+        #         self.clamped = True
+        # elif x_k1 > 0 and error > 0:
+        #     if x_k1 != x_k2:
+        #         self.clamped = True
+        # else:
+        #     self.clamped = False
+
         self.data_x = np.delete(self.data_x, -1)
         self.data_x = np.insert(self.data_x, 0, x_k)
         self.data_y = y_k
@@ -133,7 +160,7 @@ class Agent:
                     else:
                         vel_heading = acc_heading
 
-            # print(f"{self.agent_name} -> SP : {speed_set_point:.4f}\t PV : {speed_out:.4f}\t MV : {int(mv*255)}\t heading : {vel_heading:.4f}")
+            print(f"{self.agent_name} -> SP : {speed_set_point:.4f}\t PV : {speed_out:.4f}\t MV : {int(mv*255)}\t heading : {vel_heading:.4f}")
             vel_x, vel_y = pol2cart(speed_out, vel_heading * np.pi / 180)
             self.velocity = Vector(vel_x, vel_y) / 0.3683 / 0.01
             self.position += self.velocity * dt
@@ -159,10 +186,10 @@ class Agent:
             for agent in agents:
                 dist = getDistance(self.position, agent.position)
                 if agent is not self:
-                    if dist >= self.inner and dist <= self.outer:
+                    if dist >= 2 * self.sensor.agent_size and dist <= self.outer + self.sensor.agent_size:
                         total += 1
 
-        if total == len(agents)-1:
+        if total == len(agents)-2:
             return 1
         else:
             return 0
